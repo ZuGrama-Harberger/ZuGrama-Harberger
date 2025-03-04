@@ -30,3 +30,6 @@ error Harberger_AssetDoesntExists();
 error Harberger_BuyoutBidTooLow();
 error Harberger_TimelockNotEnded();
 error Harberger_AssetAlreadyExpired();
+error Harberger_NotSbt();
+error Harberger_NoZeroAddress();
+error Harberger_AssetAlreadyRegistered();

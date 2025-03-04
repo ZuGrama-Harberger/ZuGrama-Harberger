@@ -22,23 +22,26 @@ contract Harberger {
         uint256 taxToBeReturned;
     }
 
-    address public immutable auction;
     address public immutable admin;
+    address public immutable sbtFactory;
     IERC20 immutable USDC;
 
     uint256 public taxRate; //Tax Rate. Is in 6 decimals. Where 100% = 1000000
     uint256 public excessEarnings;
 
     mapping(address asset => mapping(uint256 assetId => HarbergerDetails)) private assetToHarberger;
+    mapping(address asset => address idc) private assetToIdc;
 
-    constructor(address _admin, address _auction, address _usdc) {
-        auction = _auction;
+    constructor(address _admin, address _sbtFactory, address _usdc) {
+        sbtFactory = _sbtFactory;
         admin = _admin;
         USDC = IERC20(_usdc);
     }
 
-    modifier onlyAuction() {
-        if (msg.sender != auction) {
+    
+    modifier onlyIdc(address _asset) {
+        address idc = getAssetToIdc(_asset);
+        if (msg.sender != idc) {
             revert Harberger_NotAuction();
         }
         _;
@@ -51,6 +54,34 @@ contract Harberger {
         _;
     }
 
+    modifier onlySbtFactory() {
+        if (msg.sender != sbtFactory) {
+            revert Harberger_NotSbt();
+        }
+        _;
+    }
+
+    /**
+     * @dev Registers asset from SBT Factory
+     * @param _asset Address of the SBT asset
+     */
+    function registerSBT(address _asset, address _idc) external onlySbtFactory() {
+        // Check if the asset is already registered for the given assetId
+        if (assetToIdc[_asset] != address(0)) { // which mean IDC is already set for this asset
+            revert Harberger_AssetAlreadyRegistered();
+        }
+
+        if (_asset == address(0) || _idc == address(0)) {
+            revert Harberger_NoZeroAddress();
+        }
+        // Update the mapping with the new details
+        assetToIdc[_asset] = _idc;
+
+        // Emit an event to confirm registration
+        emit SBTRegistered(_asset);
+    }
+    
+
     function initialMint(
         address _asset,
         uint256 _assetId,
@@ -61,7 +92,7 @@ contract Harberger {
         uint256 _initialValue
     )
         external
-        onlyAuction
+        onlyIdc(_asset)
     {
         HarbergerDetails memory harbergerDetails = getHarbegerDetails(_asset, _assetId);
 
@@ -77,7 +108,8 @@ contract Harberger {
 
         uint256 tax = getTotalTaxForValue(_initialValue);
 
-        USDC.safeTransferFrom(auction, address(this), tax + _winningBidAmout);
+        address idc = getAssetToIdc(_asset);
+        USDC.safeTransferFrom(idc, address(this), tax + _winningBidAmout);
 
         SBT(_asset).mint(_bidder, _assetId);
     }
@@ -203,5 +235,9 @@ contract Harberger {
 
     function getHarbegerDetails(address _asset, uint256 _assetId) public view returns (HarbergerDetails memory) {
         return assetToHarberger[_asset][_assetId];
+    }
+
+    function getAssetToIdc(address _asset) public view  returns (address) {
+        return assetToIdc[_asset];
     }
 }

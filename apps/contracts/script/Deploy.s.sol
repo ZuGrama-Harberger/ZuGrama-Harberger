@@ -2,7 +2,7 @@
 pragma solidity 0.8.26;
 
 import { Script } from "forge-std/Script.sol";
-import { Auction } from "src/Auction.sol";
+import { Auction } from "src/Initial Distribution/Auction.sol";
 import { Harberger } from "src/Harberger.sol";
 import { SBT } from "src/SBT.sol";
 import { MockUsdc } from "test/mocks/MockUsdc.sol";

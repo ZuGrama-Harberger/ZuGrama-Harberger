@@ -7,7 +7,11 @@ contract DefaultPriceCalculator is IPriceCalculator {
 
     function getPrice() external override returns (uint256 price) {}
 
-    function getCurrentPrice()
+    function getCurrentPrice(
+        uint256 startingPrice,
+        uint256 duration,
+        uint256 deploymentTime
+    )
         external
         override
         returns (uint256 currentPrice)

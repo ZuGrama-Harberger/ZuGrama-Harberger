@@ -15,3 +15,5 @@ event Harberger_Buyout_Initiated(
 event SBTFactory_New_Asset(
     address indexed assetAddress, address indexed initialOwner, string indexed name, string symbol
 );
+
+event SBTRegistered(address indexed assetAddress);
